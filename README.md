@@ -89,6 +89,12 @@ Item Spammer is a Guild Wars bot that helps you advance character titles by auto
 - The bot displays progress for **all three titles**, even when working on just one category
 - Final statistics are shown in the log when stopped
 
+## Planned Features
+
+- 🏰 **Travel to Guild Hall:** Automatically travel to the Guild Hall to use tonics or fireworks and bypass usage restrictions
+- 📦 **Storage Integration:** Pick up items directly from storage to avoid manually moving them to the character's inventory
+- ⚙️ **Configurable Priority:** Option to change the priority order of item usage (from most valuable to least valuable, or custom order)
+
 ## License
 WIP
 
