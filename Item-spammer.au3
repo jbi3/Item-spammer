@@ -5,10 +5,10 @@
     Purpose: Automatically use consumable items to advance character titles (Alcohol, Sweet, Party).
 
     Features:
-	    - Automatic item usage with randomized delays for 3 categories: Alcohol, Sweet, Party
+	    - Automatic use of items in player's inventory with randomized delays for 3 categories: Alcohol, Sweet, Party
 	    - Real-time title tracking via GwAu3 API (Drunkard, Party Animal, Sweet Tooth)
 	    - Point threshold management (10,000 points) to stop using items when max title is achieved
-	    - Use less valuable items first (1 point items, then 2 points, etc.)
+	    - Use less valuable items first (1 point items, then 2 points items, etc.)
 #ce =============================================================================================================================
 
 #RequireAdmin

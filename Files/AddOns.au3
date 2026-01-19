@@ -201,7 +201,7 @@ EndFunc
 Func GetItemPoints($aModelID)
 	; Lookup point value for a given ModelID using binary search (O(log n))
 	; Array is sorted by ModelID in InitializePointMapping()
-	Local $iFound = _ArrayBinarySearch($g_PointMapping, $aModelID, 0, 0, 0, 0)
+	Local $iFound = _ArrayBinarySearch($g_PointMapping, $aModelID, 0, 0, 0)
 	If $iFound >= 0 Then
 		Return $g_PointMapping[$iFound][1]
 	EndIf
@@ -234,5 +234,19 @@ Func FormatMillisecondsAsTime($iMilliseconds)
 	If $iSeconds < 0 Then $iSeconds = 0
 	
 	Return StringFormat("%02d:%02d:%02d", $iHours, $iMinutes, $iSeconds)
+EndFunc
+
+Func GetTitleLevel($iPoints)
+	; Calculate title level based on points
+	; 0-999 = level 0 (no title)
+	; 1000-9999 = level 1
+	; 10000+ = level 2 (max)
+	If $iPoints < 1000 Then
+		Return 0
+	ElseIf $iPoints < 10000 Then
+		Return 1
+	Else
+		Return 2
+	EndIf
 EndFunc
 #EndRegion Utility Functions
