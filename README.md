@@ -96,10 +96,11 @@ Item Spammer is a Guild Wars bot that helps you advance character titles by auto
 - ⚙️ **Configurable Priority:** Option to change the priority order of item usage (from most valuable to least valuable, or custom order)
 
 ## License
-WIP
 
-## Credits
-- **Author:** Arca
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Author
+Made by Arca, also known as jbi3
 
 ---
 
