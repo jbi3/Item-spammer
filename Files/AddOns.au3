@@ -68,7 +68,9 @@ Global Const $GC_AI_ALL_TONICS[24] = [23, _
 
 #Region Global Variables
 ; Point mapping (ModelID -> Points)
-Global $g_PointMapping[77][2] ; Will be populated on initialization
+; Note: Explorable-area-only items excluded (15 items removed)
+; These items can only be used in PvE explorable areas and cannot be spammed efficiently
+Global $g_PointMapping[62][2] ; Will be populated on initialization
 #EndRegion Global Variables
 
 #Region Point Mapping Functions
@@ -149,45 +151,39 @@ Func InitializePointMapping()
 	$g_PointMapping[$i][1] = 50
 	$i += 1
 	
-	; Sweet items - 1 point (13 items)
-	Local $a_Sweet1Pts[13] = [$GC_I_MODELID_CANDY_APPLE, $GC_I_MODELID_CANDY_CORN, $GC_I_MODELID_FRUITCAKE, _
-		$GC_I_MODELID_GOLDEN_EGG, $GC_I_MODELID_HONEYCOMB, $GC_I_MODELID_MANDRAGOR_ROOT_CAKE, _
-		$GC_I_MODELID_PUMPKIN_COOKIE, $GC_I_MODELID_REFINED_JELLY, $GC_I_MODELID_PUMPKIN_PIE, _
-		$GC_I_MODELID_SUGARY_BLUE_DRINK, $GC_I_MODELID_WAR_SUPPLIES, $GC_I_MODELID_WINTERGREEN_CC, _
-		$GC_I_MODELID_RAINBOW_CC]
+	; Sweet items - 1 point (3 items)
+	; EXCLUDED explorable-only items: Candy Apple, Candy Corn, Golden Egg, Honeycomb, 
+	; Pumpkin Cookie, Refined Jelly, Slice of Pumpkin Pie, War Supplies, 
+	; Wintergreen Candy Cane, Rainbow Candy Cane
+	Local $a_Sweet1Pts[3] = [$GC_I_MODELID_FRUITCAKE, $GC_I_MODELID_MANDRAGOR_ROOT_CAKE, _
+		$GC_I_MODELID_SUGARY_BLUE_DRINK]
 	For $j = 0 To UBound($a_Sweet1Pts) - 1
 		$g_PointMapping[$i][0] = $a_Sweet1Pts[$j]
 		$g_PointMapping[$i][1] = 1
 		$i += 1
 	Next
 	
-	; Sweet items - 2 points (5 items)
-	Local $a_Sweet2Pts[5] = [$GC_I_MODELID_PEPPERMINT_CC, $GC_I_MODELID_CUPCAKE, $GC_I_MODELID_CHOCOLATE_BUNNY, _
-		$GC_I_MODELID_RED_BEAN_CAKE, $GC_I_MODELID_JAR_OF_HONEY]
+	; Sweet items - 2 points (3 items)
+	; EXCLUDED explorable-only items: Peppermint Candy Cane, Birthday Cupcake
+	Local $a_Sweet2Pts[3] = [$GC_I_MODELID_CHOCOLATE_BUNNY, $GC_I_MODELID_RED_BEAN_CAKE, _
+		$GC_I_MODELID_JAR_OF_HONEY]
 	For $j = 0 To UBound($a_Sweet2Pts) - 1
 		$g_PointMapping[$i][0] = $a_Sweet2Pts[$j]
 		$g_PointMapping[$i][1] = 2
 		$i += 1
 	Next
 	
-	; Sweet items - 3 points (4 items)
-	Local $a_Sweet3Pts[4] = [$GC_I_MODELID_CREME_BRULEE, $GC_I_MODELID_KRYTAN_LOKUM, _
-		$GC_I_MODELID_MINI_TREATS_OF_PURITY, $GC_I_MODELID_GREEN_ROCK]
+	; Sweet items - 3 points (3 items)
+	; EXCLUDED explorable-only items: Green Rock Candy
+	Local $a_Sweet3Pts[3] = [$GC_I_MODELID_CREME_BRULEE, $GC_I_MODELID_KRYTAN_LOKUM, _
+		$GC_I_MODELID_MINI_TREATS_OF_PURITY]
 	For $j = 0 To UBound($a_Sweet3Pts) - 1
 		$g_PointMapping[$i][0] = $a_Sweet3Pts[$j]
 		$g_PointMapping[$i][1] = 3
 		$i += 1
 	Next
 	
-	; Sweet items - 5 points (1 item)
-	$g_PointMapping[$i][0] = $GC_I_MODELID_BLUE_ROCK
-	$g_PointMapping[$i][1] = 5
-	$i += 1
-	
-	; Sweet items - 7 points (1 item)
-	$g_PointMapping[$i][0] = $GC_I_MODELID_RED_ROCK
-	$g_PointMapping[$i][1] = 7
-	$i += 1
+	; EXCLUDED explorable-only items: Blue Rock Candy (5pt), Red Rock Candy (7pt)
 	
 	; Sweet items - 50 points (1 item)
 	$g_PointMapping[$i][0] = $GC_I_MODELID_DELICIOUS_CAKE

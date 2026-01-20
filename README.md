@@ -1,6 +1,6 @@
 # Item Spammer
 
-**Version:** 1.0  
+**Version:** 1.0.1
 
 ## Overview
 
@@ -27,6 +27,7 @@ Item Spammer is a Guild Wars bot that helps you advance character titles by auto
 - **Guild Wars** (Game must be running)
 - **[GwAu3](https://github.com/JAG-GW/GwAu3)** - Guild Wars AutoIt library
 - **AutoIt3** - To run `.au3` scripts
+- **Location:** Must be in an **Outpost** or **Guild Hall** for optimal functionality
 
 ## Installation
 
@@ -72,17 +73,18 @@ Item Spammer is a Guild Wars bot that helps you advance character titles by auto
 **Reference:** [Guild Wars Wiki - Festive Items](https://wiki.guildwars.com/wiki/Festive_item)
 
 ### Sweet (Sweet Tooth)
-- 1 point: Candy Corn, Candy Apple, etc. (13 items)
-- 2 points: Cupcake, Chocolate Bunny, etc. (5 items)
-- 3 points: Crème Brûlée, Green Rock Candy (4 items)
-- 5 points: Blue Rock Candy
-- 7 points: Red Rock Candy
+- 1 point: Fruitcake, Mandragor Root Cake, Sugary Blue Drink (3 items)
+- 2 points: Chocolate Bunny, Red Bean Cake, Jar of Honey (3 items)
+- 3 points: Crème Brûlée, Krytan Lokum, Mini Treats of Purity (3 items)
 - 50 points: Delicious Cake
 
 **Reference:** [Guild Wars Wiki - Sweet](https://wiki.guildwars.com/wiki/Sweet)
 
+**Note:** Explorable-area-only items are excluded (Candy Apple, Candy Corn, Golden Egg, Honeycomb, Pumpkin Cookie, Refined Jelly, Slice of Pumpkin Pie, War Supplies, Wintergreen/Rainbow/Peppermint Candy Canes, Birthday Cupcake, Rock Candies). These items cannot be used in outposts/guild halls where the bot operates.
+
 ## Tips
 
+- **Location:** Run the bot from an **Outpost** or **Guild Hall**
 - Stock your inventory with items **before** starting the bot
 - Use cheaper items to save expensive ones (automation will prioritize automatically)
 - The bot displays progress for **all three titles**, even when working on just one category
@@ -94,6 +96,12 @@ Item Spammer is a Guild Wars bot that helps you advance character titles by auto
 - 📦 **Storage Integration:** Pick up items directly from storage to avoid manually moving them to the character's inventory
 - ⚙️ **Configurable Priority:** Option to change the priority order of item usage (from most valuable to least valuable, or custom order)
 - 🔄 **Multi-Category Support:** Allow using items from multiple categories simultaneously (e.g., Alcohol + Party + Sweet in one session)
+
+## Feature Ideas
+
+Ideas under consideration for future development:
+
+- 🎁 **Extended Item Support:** Add functionality to automatically open Strongboxes, Wintersday Gifts, Zaishen Chests, and other stackable containers (ideas from Title Helper)
 
 ## License
 

@@ -264,31 +264,17 @@ Func GetCategoryItemsInInventory($iCategory)
 			$iModelIdx += 1
 			
 		Case $CATEGORY_SWEET
-			; Pre-allocate array size
-			Local $iTotalSize = $GC_AI_ALL_SWEET[0] + 9 + 6
+			; Pre-allocate array size (10 items)
+			; Only includes items usable in outposts/guild halls
+			; EXCLUDED: 15 explorable-area-only items (Candy Apple, Candy Corn, Golden Egg, 
+			; Honeycomb, Pumpkin Cookie, Refined Jelly, Pumpkin Pie, War Supplies, 
+			; Wintergreen/Rainbow/Peppermint Candy Canes, Birthday Cupcake, Rock Candies)
+			Local $iTotalSize = $GC_AI_ALL_SWEET[0]
 			ReDim $aItemModelIDs[$iTotalSize]
 			
-			; Fill array directly without resizing
+			; Fill array with outpost-usable sweet items only
 			For $i = 1 To $GC_AI_ALL_SWEET[0]
 				$aItemModelIDs[$iModelIdx] = $GC_AI_ALL_SWEET[$i]
-				$iModelIdx += 1
-			Next
-			
-			; Add from $GC_AI_PCONS (9 items)
-			Local $a_SweetFromPcons[9] = [$GC_I_MODELID_CANDY_APPLE, $GC_I_MODELID_CANDY_CORN, $GC_I_MODELID_GOLDEN_EGG, _
-				$GC_I_MODELID_PUMPKIN_PIE, $GC_I_MODELID_CUPCAKE, $GC_I_MODELID_WAR_SUPPLIES, _
-				$GC_I_MODELID_BLUE_ROCK, $GC_I_MODELID_GREEN_ROCK, $GC_I_MODELID_RED_ROCK]
-			For $i = 0 To 8
-				$aItemModelIDs[$iModelIdx] = $a_SweetFromPcons[$i]
-				$iModelIdx += 1
-			Next
-			
-			; Add from $GC_AI_DP_REMOVAL (6 items)
-			Local $a_SweetFromDP[6] = [$GC_I_MODELID_PEPPERMINT_CC, $GC_I_MODELID_REFINED_JELLY, _
-				$GC_I_MODELID_WINTERGREEN_CC, $GC_I_MODELID_RAINBOW_CC, $GC_I_MODELID_HONEYCOMB, _
-				$GC_I_MODELID_PUMPKIN_COOKIE]
-			For $i = 0 To 5
-				$aItemModelIDs[$iModelIdx] = $a_SweetFromDP[$i]
 				$iModelIdx += 1
 			Next
 	EndSwitch
