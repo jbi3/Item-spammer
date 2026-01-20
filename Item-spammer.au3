@@ -1,14 +1,14 @@
 #cs =============================================================================================================================
-	Item-Spammer version 1.0
+	Item-Spammer version 1.0.1
 	Author: Arca
 	Status: Public
-    Purpose: Automatically use consumable items to advance character titles (Alcohol, Sweet, Party).
+    Purpose: It helps ease the pain of spamming items for the Drunkard, Party Animal and Sweet Tooth titles.
 
     Features:
-	    - Automatic use of items in player's inventory with randomized delays for 3 categories: Alcohol, Sweet, Party
-	    - Real-time title tracking via GwAu3 API (Drunkard, Party Animal, Sweet Tooth)
-	    - Point threshold management (10,000 points) to stop using items when max title is achieved
-	    - Use less valuable items first (1 point items, then 2 points items, etc.)
+	    - Automatic use of items in player's inventory with randomized delays for 3 categories: Alcohol, Sweet and Party.
+	    - Real-time title tracking.
+	    - The bot automatically stops when 10,000 points are reached.
+	    - Uses the least valuable items first (1 pt → 2 pts → 3 pts, etc.) to preserve higher-value items.
 #ce =============================================================================================================================
 
 #RequireAdmin
