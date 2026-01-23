@@ -4,9 +4,9 @@
 ; GUI controls
 Global $hGui = 0
 Global $cbx_char_select = 0
-Global $radio_alcohol = 0
-Global $radio_sweet = 0
-Global $radio_party = 0
+Global $chk_alcohol = 0
+Global $chk_party = 0
+Global $chk_sweet = 0
 Global $btn_start = 0
 Global $lbl_status = 0
 Global $lbl_items_used = 0
@@ -48,15 +48,15 @@ Func CreateGUI()
 	
 	; Category selection
 	$yPos += 30
-	GUICtrlCreateLabel("Choose a category", 15, $yPos, 290, 17)
+	GUICtrlCreateLabel("Choose categories", 15, $yPos, 290, 17)
 	GUICtrlSetFont(-1, 8, 600) ; Bold
 	$yPos += 18
-	$radio_alcohol = GUICtrlCreateRadio("Alcohol", 15, $yPos, 70, 17)
-	GUICtrlSetOnEvent($radio_alcohol, "OnCategoryChange")
-	$radio_party = GUICtrlCreateRadio("Party", 95, $yPos, 70, 17)
-	GUICtrlSetOnEvent($radio_party, "OnCategoryChange")
-	$radio_sweet = GUICtrlCreateRadio("Sweet", 175, $yPos, 70, 17)
-	GUICtrlSetOnEvent($radio_sweet, "OnCategoryChange")
+	$chk_alcohol = GUICtrlCreateCheckbox("Alcohol", 15, $yPos, 70, 17)
+	GUICtrlSetOnEvent($chk_alcohol, "OnCategoryChange")
+	$chk_party = GUICtrlCreateCheckbox("Party", 95, $yPos, 70, 17)
+	GUICtrlSetOnEvent($chk_party, "OnCategoryChange")
+	$chk_sweet = GUICtrlCreateCheckbox("Sweet", 175, $yPos, 70, 17)
+	GUICtrlSetOnEvent($chk_sweet, "OnCategoryChange")
 	
 	; Start/Stop button
 	$yPos += 25
@@ -148,13 +148,13 @@ Func OnCharacterChange()
 EndFunc
 
 Func OnCategoryChange()
-	Local $radio = @GUI_CtrlId
-	If $radio = $radio_alcohol Then
-		$SelectedCategory = $CATEGORY_ALCOHOL  ; 0 = Drunkard
-	ElseIf $radio = $radio_party Then
-		$SelectedCategory = $CATEGORY_PARTY    ; 1 = Party Animal
-	ElseIf $radio = $radio_sweet Then
-		$SelectedCategory = $CATEGORY_SWEET    ; 2 = Sweet Tooth
+	Local $checkbox = @GUI_CtrlId
+	If $checkbox = $chk_alcohol Then
+		$SelectedCategories[$CATEGORY_ALCOHOL] = (GUICtrlRead($chk_alcohol) = $GUI_CHECKED)
+	ElseIf $checkbox = $chk_party Then
+		$SelectedCategories[$CATEGORY_PARTY] = (GUICtrlRead($chk_party) = $GUI_CHECKED)
+	ElseIf $checkbox = $chk_sweet Then
+		$SelectedCategories[$CATEGORY_SWEET] = (GUICtrlRead($chk_sweet) = $GUI_CHECKED)
 	EndIf
 	UpdateStartButtonState()
 EndFunc
@@ -175,7 +175,16 @@ Func OnExit()
 EndFunc
 
 Func UpdateStartButtonState()
-	Local $bCanStart = ($CurrentCharacter <> "" And $SelectedCategory >= 0)
+	; Check if at least one category is selected
+	Local $bCategorySelected = False
+	For $i = 0 To 2
+		If $SelectedCategories[$i] Then
+			$bCategorySelected = True
+			ExitLoop
+		EndIf
+	Next
+	
+	Local $bCanStart = ($CurrentCharacter <> "" And $bCategorySelected)
 	If $BotInitialized Then
 		If $BotRunning Then
 			GUICtrlSetData($btn_start, "Stop")

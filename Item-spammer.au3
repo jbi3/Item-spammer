@@ -1,11 +1,12 @@
 #cs =============================================================================================================================
-	Item-Spammer version 1.0.1
+	Item-Spammer version 1.1.0
 	Author: Arca
 	Status: Public
     Purpose: It helps ease the pain of spamming items for the Drunkard, Party Animal and Sweet Tooth titles.
 
     Features:
-	    - Automatic use of items in player's inventory with randomized delays for 3 categories: Alcohol, Sweet and Party.
+	    - Automatic use of items in player's inventory for 3 categories: Alcohol, Sweet and Party.
+	    - Multi-category selection: spam 1, 2, or all 3 categories in a single session.
 	    - Real-time title tracking.
 	    - The bot automatically stops when 10,000 points are reached.
 	    - Uses the least valuable items first (1 pt → 2 pts → 3 pts, etc.) to preserve higher-value items.
@@ -29,8 +30,10 @@ Opt("GUICloseOnESC", False)
 Global $BotRunning = False
 Global $BotInitialized = False
 
-; Category and points
-Global $SelectedCategory = -1 ; -1 = none selected
+; Category selection and processing
+Global $SelectedCategories[3] = [False, False, False] ; [0]=Alcohol, [1]=Party, [2]=Sweet
+Global $CurrentCategoryIndex = -1 ; Current category being processed (-1 = none)
+Global $CategoryQueue[0] ; Queue of category indices to process
 
 ; Title tracking (all 3 titles)
 ; [0]=Drunkard, [1]=Party Animal, [2]=Sweet Tooth
@@ -102,14 +105,76 @@ EndFunc
 #EndRegion Title Sync Functions
 
 #Region Bot Functions
+Func BuildCategoryQueue()
+	; Build queue of categories to process based on selection
+	; Returns True if at least one category is selected, False otherwise
+	ReDim $CategoryQueue[0]
+	
+	For $i = 0 To 2
+		If $SelectedCategories[$i] Then
+			Local $iSize = UBound($CategoryQueue)
+			ReDim $CategoryQueue[$iSize + 1]
+			$CategoryQueue[$iSize] = $i
+		EndIf
+	Next
+	
+	Return (UBound($CategoryQueue) > 0)
+EndFunc
+
+Func GetCategoryName($iCategory)
+	; Returns category name as string
+	Switch $iCategory
+		Case $CATEGORY_ALCOHOL
+			Return "Alcohol"
+		Case $CATEGORY_PARTY
+			Return "Party"
+		Case $CATEGORY_SWEET
+			Return "Sweet"
+		Case Else
+			Return "Unknown"
+	EndSwitch
+EndFunc
+
+Func StartNextCategory()
+	; Start processing the next category in the queue
+	; Returns True if a category was started, False if queue is empty
+	
+	If UBound($CategoryQueue) = 0 Then
+		; No more categories to process
+		$CurrentCategoryIndex = -1
+		Return False
+	EndIf
+	
+	; Get next category from queue
+	$CurrentCategoryIndex = $CategoryQueue[0]
+	
+	; Remove from queue (shift array)
+	Local $iQueueSize = UBound($CategoryQueue)
+	If $iQueueSize > 1 Then
+		Local $aTempQueue[$iQueueSize - 1]
+		For $i = 1 To $iQueueSize - 1
+			$aTempQueue[$i - 1] = $CategoryQueue[$i]
+		Next
+		$CategoryQueue = $aTempQueue
+	Else
+		ReDim $CategoryQueue[0]
+	EndIf
+	
+	; Log category start
+	LogMessage("Processing category: " & GetCategoryName($CurrentCategoryIndex))
+	
+	Return True
+EndFunc
+
 Func StartBot()
 	If $CurrentCharacter = "" Then
 		LogMessage("Error: Please select a character")
 		Return
 	EndIf
 	
-	If $SelectedCategory < 0 Then
-		LogMessage("Error: Start by choosing a category")
+	; Build category queue from selections
+	If Not BuildCategoryQueue() Then
+		LogMessage("Error: Please select at least one category")
 		Return
 	EndIf
 	
@@ -128,6 +193,14 @@ Func StartBot()
 	; Verify character name was retrieved successfully
 	If StringLen($CurrentCharacter) = 0 Then
 		LogMessage("Error: Failed to retrieve character name from game")
+		Return
+	EndIf
+	
+	; Verify we're in an outpost or guild hall
+	Local $instanceType = Map_GetInstanceInfo("Type")
+	If $instanceType <> 0 And $instanceType <> 1 Then
+		LogMessage("Error: You must be in an Outpost or Guild Hall to use items")
+		LogMessage("Current location type: " & $instanceType & " (0=Outpost, 1=Guild Hall, 2=Explorable)")
 		Return
 	EndIf
 	
@@ -152,17 +225,19 @@ Func StartBot()
 	$BotRunning = True
 	UpdateStartButtonState()
 	
-	Local $sCategory = ""
-	Switch $SelectedCategory
-		Case $CATEGORY_ALCOHOL  ; 0
-			$sCategory = "Alcohol"
-		Case $CATEGORY_PARTY    ; 1
-			$sCategory = "Party"
-		Case $CATEGORY_SWEET    ; 2
-			$sCategory = "Sweet"
-	EndSwitch
+	; Log selected categories
+	Local $sCategories = ""
+	For $i = 0 To 2
+		If $SelectedCategories[$i] Then
+			If $sCategories <> "" Then $sCategories &= ", "
+			$sCategories &= GetCategoryName($i)
+		EndIf
+	Next
 	
-	LogMessage("Script started - " & $sCategory & " category selected")
+	LogMessage("Script started - Categories: " & $sCategories)
+	
+	; Start first category
+	StartNextCategory()
 EndFunc
 
 Func StopBot()
@@ -377,64 +452,87 @@ While 1
 			LogMessage("Game client disconnected or map not loaded")
 			StopBot()
 		Else
-			; Get items of selected category from inventory
-			Local $aItems = GetCategoryItemsInInventory($SelectedCategory)
-			
-			; If no items, stop
-			If UBound($aItems) = 0 Then
-				LogMessage("Run out of items")
+			; Check if we have a current category to process
+			If $CurrentCategoryIndex < 0 Then
+				; No current category - should not happen in normal flow
+				LogMessage("Error: No category selected for processing")
 				StopBot()
 			Else
-				; Sort items by points (lowest first)
-				$aItems = SortItemsByPoints($aItems)
+				; Get items of current category from inventory
+				Local $aItems = GetCategoryItemsInInventory($CurrentCategoryIndex)
 				
-				; Verify array is valid after sorting
+				; Check if current category is complete
+				Local $bCategoryComplete = False
+				Local $sReason = ""
+				
 				If UBound($aItems) = 0 Then
-					LogMessage("Error: Item array invalid after sorting")
-					StopBot()
-					ContinueLoop
+					$bCategoryComplete = True
+					$sReason = "Run out of items"
+				ElseIf $g_iTitleCurrentPoints[$CurrentCategoryIndex] >= $MAX_POINTS Then
+					$bCategoryComplete = True
+					$sReason = "Threshold reached (10,000 points)"
 				EndIf
 				
-				; Use first item
-				Local $itemPtr = $aItems[0][0]
-				Local $modelID = $aItems[0][1]
-				Local $points = $aItems[0][2]
-				
-				If UseItem($itemPtr) Then
-					; Item used successfully
-					$ItemsUsed += 1
+				If $bCategoryComplete Then
+					; Current category is complete
+					LogMessage($sReason & " for " & GetCategoryName($CurrentCategoryIndex) & " category")
 					
-					; Log item used
-					LogMessage("Used item (ModelID: " & $modelID & ") (" & $points & "pt)")
+					; Try to start next category
+					If StartNextCategory() Then
+						; Successfully started next category - continue processing
+						ContinueLoop
+					Else
+						; No more categories - stop bot
+						LogMessage("All selected categories completed")
+						StopBot()
+					EndIf
+				Else
+					; Process current category
+					; Sort items by points (lowest first)
+					$aItems = SortItemsByPoints($aItems)
 					
-					; $SelectedCategory directly maps to: [0]=Drunkard, [1]=Party, [2]=Sweet
-					Local $titleIdx = $SelectedCategory
-					
-					; Validate title index
-					If $titleIdx < 0 Or $titleIdx > 2 Then
-						LogMessage("Error: Invalid title index " & $titleIdx)
+					; Verify array is valid after sorting
+					If UBound($aItems) = 0 Then
+						LogMessage("Error: Item array invalid after sorting")
 						StopBot()
 						ContinueLoop
 					EndIf
 					
-					; Check threshold - for the active category being used
-					If $g_iTitleCurrentPoints[$titleIdx] >= $MAX_POINTS Then
-						LogMessage("Threshold reached (10,000 points) for selected category")
-						StopBot()
-					Else
+					; Use first item
+					Local $itemPtr = $aItems[0][0]
+					Local $modelID = $aItems[0][1]
+					Local $points = $aItems[0][2]
+					
+					If UseItem($itemPtr) Then
+						; Item used successfully
+						$ItemsUsed += 1
+						
+						; Log item used
+						LogMessage("Used item (ModelID: " & $modelID & ") (" & $points & "pt)")
+						
+						; $CurrentCategoryIndex directly maps to: [0]=Drunkard, [1]=Party, [2]=Sweet
+						Local $titleIdx = $CurrentCategoryIndex
+						
+						; Validate title index
+						If $titleIdx < 0 Or $titleIdx > 2 Then
+							LogMessage("Error: Invalid title index " & $titleIdx)
+							StopBot()
+							ContinueLoop
+						EndIf
+						
 						; Check if item used was a tonic
 						; If so, add cooldown delay before using another tonic
 						If IsTonic($modelID) Then
 							LogMessage("Tonic used - waiting " & $TONIC_COOLDOWN_MS & "ms before next item")
 							Sleep($TONIC_COOLDOWN_MS)
 						EndIf
+					Else
+						; Item usage failed - skip
+						LogMessage("Item (ModelID: " & $modelID & ") cannot be used here - skipping")
 					EndIf
-				Else
-					; Item usage failed - skip
-					LogMessage("Item (ModelID: " & $modelID & ") cannot be used here - skipping")
+					
+					Sleep(100)
 				EndIf
-				
-				Sleep(100)
 			EndIf
 		EndIf
 	EndIf
