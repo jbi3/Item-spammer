@@ -45,10 +45,6 @@ Global $FinalRuntime = "" ; Stores final runtime when bot stops
 
 ; Character info
 Global $CurrentCharacter = ""
-
-; Validated delay constants (validated once at startup for performance)
-Global $g_iValidatedMinDelay = 0
-Global $g_iValidatedMaxDelay = 0
 #EndRegion Global Variables
 
 #Region Title Sync Functions
@@ -349,11 +345,6 @@ EndFunc
 ; Initialize point mapping
 InitializePointMapping()
 
-; Validate delay constants once at startup for performance
-$g_iValidatedMinDelay = ($MIN_DELAY < 50) ? 50 : $MIN_DELAY
-$g_iValidatedMaxDelay = ($MAX_DELAY > 60000) ? 60000 : $MAX_DELAY
-If $g_iValidatedMinDelay > $g_iValidatedMaxDelay Then $g_iValidatedMinDelay = $g_iValidatedMaxDelay
-
 ; Create GUI
 CreateGUI()
 
@@ -443,8 +434,7 @@ While 1
 					LogMessage("Item (ModelID: " & $modelID & ") cannot be used here - skipping")
 				EndIf
 				
-				; Random delay - use pre-validated delay constants
-				Sleep(Random($g_iValidatedMinDelay, $g_iValidatedMaxDelay, 1))
+				Sleep(100)
 			EndIf
 		EndIf
 	EndIf

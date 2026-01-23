@@ -13,7 +13,7 @@ Global Const $MIN_DELAY = 100
 Global Const $MAX_DELAY = 200
 
 ; Timing constants
-Global Const $TONIC_COOLDOWN_MS = 6000
+Global Const $TONIC_COOLDOWN_MS = 5500
 Global Const $STATUS_UPDATE_INTERVAL_MS = 1000
 Global Const $TITLE_SYNC_INTERVAL_MS = 2000
 

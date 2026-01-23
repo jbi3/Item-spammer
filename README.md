@@ -6,17 +6,14 @@
 
 Item Spammer is a Guild Wars bot that helps you advance character titles by automatically consuming items from your inventory. It intelligently uses consumables to progress **Drunkard**, **Party Animal**, and **Sweet Tooth** titles with real-time tracking and smart item prioritization.
 
-## Features
+## ✨ Features
 
-### 🎯 Core
 - **Automatic Item Consumption:** Continuously uses items from your inventory with randomized delays (100-200ms) to appear natural
 - **Real-time Title Tracking:** Directly reads title points from game memory via GwAu3 API
 - **Three Title Categories:**
   - 🍺 **Drunkard** - Alcohol items
   - 🎉 **Party Animal** - Party items (fireworks, tonics, etc.)
   - 🍰 **Sweet Tooth** - Sweet items (candy, cakes, etc.)
-
-### 💡 Features
 - **Point Threshold Management:** Automatically stops at 10,000 points (max title level)
 - **Value-Based Prioritization:** Uses less valuable items first (1pt → 2pt → 3pt → 5pt → 7pt → 25pt → 50pt)
 - **Title Level Display:** Shows current accomplishment level (0-2) for each title
@@ -27,13 +24,12 @@ Item Spammer is a Guild Wars bot that helps you advance character titles by auto
 - **Guild Wars** (Game must be running)
 - **[GwAu3](https://github.com/JAG-GW/GwAu3)** - Guild Wars AutoIt library
 - **AutoIt3** - To run `.au3` scripts
-- **Location:** Must be in an **Outpost** or **Guild Hall** for optimal functionality
 
 ## Installation
 
-1. Clone or download the GwAu3 repository, inside Scripts folder
-2. Navigate to `Scripts/Item-spammer/`
-3. Run `Item-spammer.au3` with AutoIt3
+1. Clone or download the GwAu3 repository
+2. Extract to `GwAu3/Scripts`
+3. Run `Item-spammer.au3`
 
 ## How It Works
 1. **Initialization:** Connects to Guild Wars client and reads current title points from memory
@@ -44,6 +40,12 @@ Item Spammer is a Guild Wars bot that helps you advance character titles by auto
    - Waits for item cooldown (e.g. tonics, instant for most items)
    - Applies random delay (100-200ms) between uses
 5. **Auto-Stop:** Stops when reaching 10,000 points or running out of items
+
+### Important Notes
+
+- ⚠️ **Must be in an Outpost or Guild Hall**
+- ⚠️ **Character must be logged in** and in-game
+- ⚠️ **Do not interfere** with the game while spamming is in progress
 
 ## Title Levels
 | Level | Points Required | Display |
@@ -84,7 +86,6 @@ Item Spammer is a Guild Wars bot that helps you advance character titles by auto
 
 ## Tips
 
-- **Location:** Run the bot from an **Outpost** or **Guild Hall**
 - Stock your inventory with items **before** starting the bot
 - Use cheaper items to save expensive ones (automation will prioritize automatically)
 - The bot displays progress for **all three titles**, even when working on just one category
@@ -97,7 +98,7 @@ Item Spammer is a Guild Wars bot that helps you advance character titles by auto
 - ⚙️ **Configurable Priority:** Option to change the priority order of item usage (from most valuable to least valuable, or custom order)
 - 🔄 **Multi-Category Support:** Allow using items from multiple categories simultaneously (e.g., Alcohol + Party + Sweet in one session)
 
-## Feature Ideas
+## 💡 Feature Ideas
 
 Ideas under consideration for future development:
 
