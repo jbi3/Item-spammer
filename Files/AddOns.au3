@@ -86,7 +86,7 @@ Global Const $GC_AI_ALL_TONICS[24] = [23, _
 ; Point mapping (ModelID -> Points)
 ; Note: Explorable-area-only items excluded (15 items removed)
 ; These items can only be used in PvE explorable areas and cannot be spammed efficiently
-Global $g_PointMapping[62][2] ; Will be populated on initialization
+Global $g_PointMapping[61][2] ; Will be populated on initialization
 #EndRegion Global Variables
 
 #Region Point Mapping Functions
@@ -117,9 +117,11 @@ Func InitializePointMapping()
 		$i += 1
 	Next
 	
-	; Party items - 1 point (6 items)
+	; Party items - 1 point (5 items)
 	; Note: Array has incorrect count in [0], use UBound instead
+	; Party Beacon is also in this array but is worth 50 points (mapped below)
 	For $j = 1 To UBound($GC_AI_SPAMMABLE_PARTY) - 1
+		If $GC_AI_SPAMMABLE_PARTY[$j] = $GC_I_MODELID_PARTY_BEACON Then ContinueLoop
 		$g_PointMapping[$i][0] = $GC_AI_SPAMMABLE_PARTY[$j]
 		$g_PointMapping[$i][1] = 1
 		$i += 1
