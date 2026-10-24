@@ -65,8 +65,8 @@ A Guild Wars bot that helps you advance character titles by automatically consum
 
 ### 🍺 Alcohol (Drunkard)
 - 1 point: Hunter's Ale, Eggnog, etc. (11 items)
-- 3 points: Aged variants (7 items)
-- 50 points: Keg of Aged Hunter's Ale
+- 3 points: Aged variants, Keg of Aged Hunter's Ale (7 items)
+- 50 points: Battle Isle Iced Tea
 
 **Reference:** [Guild Wars Wiki - Alcohol](https://wiki.guildwars.com/wiki/Alcohol)
 
