@@ -13,6 +13,15 @@ Global Const $MIN_DELAY = 100
 Global Const $MAX_DELAY = 200
 Global Const $MAX_STACK_SIZE = 250
 
+; Xunlai storage panes (material storage excluded)
+Global Const $STORAGE_BAG_FIRST = $GC_I_INVENTORY_STORAGE1
+Global Const $STORAGE_BAG_LAST = $GC_I_INVENTORY_STORAGE14
+
+; Storage compaction modes (GUI combo values)
+Global Const $STORAGE_COMPACT_NONE = "Don't compact"
+Global Const $STORAGE_COMPACT_TO_START = "Compact to start (free slots at the end)"
+Global Const $STORAGE_COMPACT_TO_END = "Compact to end (free slots at the start)"
+
 ; Timing constants
 Global Const $TONIC_COOLDOWN_MS = 5500
 Global Const $STATUS_UPDATE_INTERVAL_MS = 1000
