@@ -7,6 +7,7 @@ Global $cbx_char_select = 0
 Global $chk_alcohol = 0
 Global $chk_party = 0
 Global $chk_sweet = 0
+Global $cbx_storage_mode = 0
 Global $btn_start = 0
 Global $lbl_status = 0
 Global $lbl_items_used = 0
@@ -30,12 +31,12 @@ Global $lbl_sweet_gained = 0
 
 #Region GUI Creation
 Func CreateGUI()
-	$hGui = GUICreate("Item Spammer", 320, 510)
-	
+	$hGui = GUICreate("Item Spammer", 320, 558)
+
 	Local $yPos = 5
-	
+
 	; ===== SESSION SECTION =====
-	GUICtrlCreateGroup("Session", 5, $yPos, 310, 145)
+	GUICtrlCreateGroup("Session", 5, $yPos, 310, 193)
 	
 	; Character selection
 	$yPos += 20
@@ -57,9 +58,17 @@ Func CreateGUI()
 	GUICtrlSetOnEvent($chk_party, "OnCategoryChange")
 	$chk_sweet = GUICtrlCreateCheckbox("Sweet", 175, $yPos, 70, 17)
 	GUICtrlSetOnEvent($chk_sweet, "OnCategoryChange")
-	
-	; Start/Stop button
+
+	; Storage compaction, applied at start
 	$yPos += 25
+	GUICtrlCreateLabel("Xunlai storage", 15, $yPos, 290, 17)
+	GUICtrlSetFont(-1, 8, 600) ; Bold
+	$yPos += 18
+	$cbx_storage_mode = GUICtrlCreateCombo("", 15, $yPos, 290, 25, $CBS_DROPDOWNLIST)
+	GUICtrlSetData($cbx_storage_mode, $STORAGE_COMPACT_NONE & "|" & $STORAGE_COMPACT_TO_START & "|" & $STORAGE_COMPACT_TO_END, $STORAGE_COMPACT_NONE)
+
+	; Start/Stop button
+	$yPos += 30
 	$btn_start = GUICtrlCreateButton("Start", 15, $yPos, 290, 25)
 	GUICtrlSetFont($btn_start, 10)
 	GUICtrlSetOnEvent($btn_start, "OnStartStop")

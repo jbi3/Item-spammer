@@ -1,5 +1,5 @@
 #cs =============================================================================================================================
-	Item-Spammer version 1.1.0
+	Item-Spammer version 1.2.0
 	Author: Arca
 	Status: Public
     Purpose: It helps ease the pain of spamming items for the Drunkard, Party Animal and Sweet Tooth titles.
@@ -10,6 +10,8 @@
 	    - Real-time title tracking.
 	    - The bot automatically stops when 10,000 points are reached.
 	    - Uses the least valuable items first (1 pt → 2 pts → 3 pts, etc.) to preserve higher-value items.
+	    - Merges incomplete stacks of identical items in the inventory at start (250 items max per stack).
+	    - Optionally compacts the Xunlai storage at start, leaving free slots at its end or at its start.
 #ce =============================================================================================================================
 
 #RequireAdmin
@@ -213,7 +215,16 @@ Func StartBot()
 		LogMessage("Please ensure you are logged into the game")
 		Return
 	EndIf
-	
+
+	; A failed restack or compaction only leaves items where they are: spamming can still go on
+	RestackInventory()
+	Switch GUICtrlRead($cbx_storage_mode)
+		Case $STORAGE_COMPACT_TO_START
+			CompactStorage(True)
+		Case $STORAGE_COMPACT_TO_END
+			CompactStorage(False)
+	EndSwitch
+
 	; Reset counters
 	$ItemsUsed = 0
 	$StartTime = TimerInit()
@@ -413,6 +424,146 @@ Func UseItem($itemPtr)
 	Sleep(50)
 	
 	Return True
+EndFunc
+
+Func RestackInventory()
+	; Merges incomplete stacks of identical items across inventory bags (1-4), filling the first stack found first
+	; Identical means same ModelID and ExtraID: dyes share a ModelID and only differ by ExtraID
+	; Returns True on success, False if the game did not confirm a move
+
+	Local $aStacks[0][4] ; [Bag, Slot, ModelID, ExtraID]
+	Local $aBags[4] = [$GC_I_INVENTORY_BACKPACK, $GC_I_INVENTORY_BELT_POUCH, $GC_I_INVENTORY_BAG1, $GC_I_INVENTORY_BAG2]
+
+	For $b = 0 To UBound($aBags) - 1
+		Local $bag = $aBags[$b]
+		If Item_GetBagPtr($bag) = 0 Then ContinueLoop
+
+		Local $maxSlots = Item_GetBagInfo($bag, "Slots")
+		For $slot = 1 To $maxSlots
+			Local $itemPtr = Item_GetItemBySlot($bag, $slot)
+			If $itemPtr = 0 Then ContinueLoop
+			If Not Item_GetItemInfoByPtr($itemPtr, "IsStackable") Then ContinueLoop
+			If Item_GetItemInfoByPtr($itemPtr, "Quantity") >= $MAX_STACK_SIZE Then ContinueLoop
+
+			Local $iIndex = UBound($aStacks)
+			ReDim $aStacks[$iIndex + 1][4]
+			$aStacks[$iIndex][0] = $bag
+			$aStacks[$iIndex][1] = $slot
+			$aStacks[$iIndex][2] = Item_GetItemInfoByPtr($itemPtr, "ModelID")
+			$aStacks[$iIndex][3] = Item_GetItemInfoByPtr($itemPtr, "ExtraID")
+		Next
+	Next
+
+	Local $iMoves = 0
+	Local $iSlotsFreed = 0
+	For $t = 0 To UBound($aStacks) - 2
+		For $s = $t + 1 To UBound($aStacks) - 1
+			If $aStacks[$s][2] <> $aStacks[$t][2] Or $aStacks[$s][3] <> $aStacks[$t][3] Then ContinueLoop
+
+			; A slot is empty once its whole stack has been merged into another one
+			Local $targetPtr = Item_GetItemBySlot($aStacks[$t][0], $aStacks[$t][1])
+			If $targetPtr = 0 Then ExitLoop
+			Local $sourcePtr = Item_GetItemBySlot($aStacks[$s][0], $aStacks[$s][1])
+			If $sourcePtr = 0 Then ContinueLoop
+
+			Local $iTargetQty = Item_GetItemInfoByPtr($targetPtr, "Quantity")
+			Local $iSourceQty = Item_GetItemInfoByPtr($sourcePtr, "Quantity")
+			If $iTargetQty >= $MAX_STACK_SIZE Then ExitLoop
+
+			Local $iAmount = $MAX_STACK_SIZE - $iTargetQty
+			If $iSourceQty < $iAmount Then $iAmount = $iSourceQty
+
+			Item_MoveItem_($sourcePtr, $aStacks[$t][0], $aStacks[$t][1], $iAmount)
+			If Not WaitForSlotInfo($aStacks[$t][0], $aStacks[$t][1], "Quantity", $iTargetQty + $iAmount) Then
+				LogMessage("Warning: Restack stopped, move not confirmed (ModelID: " & $aStacks[$t][2] & ")")
+				Return False
+			EndIf
+
+			$iMoves += 1
+			If $iAmount = $iSourceQty Then $iSlotsFreed += 1
+			Sleep($RESTACK_MOVE_DELAY_MS)
+		Next
+	Next
+
+	LogMessage("Restack done: " & $iMoves & " move(s), " & $iSlotsFreed & " slot(s) freed")
+	Return True
+EndFunc
+
+Func CompactStorage($bToStart)
+	; Moves Xunlai storage items towards the start (or the end) of the storage, keeping their order
+	; Every move targets an empty slot, so items are never swapped
+	; Returns True on success, False if the storage is not accessible or the game did not confirm a move
+
+	; Slots of purchased storage panes, in storage order: [Bag, Slot]
+	Local $aSlots[0][2]
+	For $bag = $STORAGE_BAG_FIRST To $STORAGE_BAG_LAST
+		If Item_GetBagPtr($bag) = 0 Then ContinueLoop
+
+		Local $maxSlots = Item_GetBagInfo($bag, "Slots")
+		For $slot = 1 To $maxSlots
+			Local $iIndex = UBound($aSlots)
+			ReDim $aSlots[$iIndex + 1][2]
+			$aSlots[$iIndex][0] = $bag
+			$aSlots[$iIndex][1] = $slot
+		Next
+	Next
+
+	If UBound($aSlots) = 0 Then
+		LogMessage("Warning: Storage compaction skipped, Xunlai storage not accessible")
+		Return False
+	EndIf
+
+	LogMessage("Compacting storage...")
+
+	; Walk the slots in compaction order: the first empty slot met receives the next item found
+	Local $iFirst = 0
+	Local $iLast = UBound($aSlots) - 1
+	Local $iStep = 1
+	If Not $bToStart Then
+		$iFirst = $iLast
+		$iLast = 0
+		$iStep = -1
+	EndIf
+
+	Local $iFree = -1
+	Local $iMoves = 0
+	For $i = $iFirst To $iLast Step $iStep
+		Local $itemPtr = Item_GetItemBySlot($aSlots[$i][0], $aSlots[$i][1])
+		If $itemPtr = 0 Then
+			If $iFree = -1 Then $iFree = $i
+			ContinueLoop
+		EndIf
+		If $iFree = -1 Then ContinueLoop
+
+		Local $iItemID = Item_GetItemInfoByPtr($itemPtr, "ItemID")
+		Item_MoveItem($itemPtr, $aSlots[$iFree][0], $aSlots[$iFree][1])
+		If Not WaitForSlotInfo($aSlots[$iFree][0], $aSlots[$iFree][1], "ItemID", $iItemID) Then
+			LogMessage("Warning: Storage compaction stopped, move not confirmed (pane " & ($aSlots[$i][0] - $STORAGE_BAG_FIRST + 1) & ", slot " & $aSlots[$i][1] & ")")
+			Return False
+		EndIf
+
+		; Every slot between the free one and the current one is empty, the current one included
+		$iFree += $iStep
+		$iMoves += 1
+		Sleep($RESTACK_MOVE_DELAY_MS)
+	Next
+
+	LogMessage("Storage compaction done: " & $iMoves & " move(s)")
+	Return True
+EndFunc
+
+Func WaitForSlotInfo($iBag, $iSlot, $sInfo, $vExpected)
+	; Moves are asynchronous: polls the slot until its item info ($sInfo) holds the expected value
+	; Returns True once reached, False after $RESTACK_MOVE_TIMEOUT_MS
+
+	Local $hTimer = TimerInit()
+	Do
+		Sleep(20)
+		Local $itemPtr = Item_GetItemBySlot($iBag, $iSlot)
+		If $itemPtr <> 0 And Item_GetItemInfoByPtr($itemPtr, $sInfo) = $vExpected Then Return True
+	Until TimerDiff($hTimer) > $RESTACK_MOVE_TIMEOUT_MS
+
+	Return False
 EndFunc
 #EndRegion Item Functions
 
