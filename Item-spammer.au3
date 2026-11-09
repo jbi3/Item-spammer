@@ -11,7 +11,6 @@
 	    - The bot automatically stops when 10,000 points are reached.
 	    - Uses the least valuable items first (1 pt → 2 pts → 3 pts, etc.) to preserve higher-value items.
 	    - Merges incomplete stacks of identical items in the inventory at start (250 items max per stack).
-	    - Optionally compacts the Xunlai storage at start, leaving free slots at its end or at its start.
 	    - Opens containers (Trick or Treat Bags, Zaishen Strongboxes, etc.) until none is left or the inventory is full.
 #ce =============================================================================================================================
 
@@ -219,14 +218,8 @@ Func StartBot()
 		Return
 	EndIf
 
-	; A failed restack or compaction only leaves items where they are: spamming can still go on
+	; A failed restack only leaves items where they are: spamming can still go on
 	RestackInventory()
-	Switch GUICtrlRead($cbx_storage_mode)
-		Case $STORAGE_COMPACT_TO_START
-			CompactStorage(True)
-		Case $STORAGE_COMPACT_TO_END
-			CompactStorage(False)
-	EndSwitch
 
 	; Reset counters
 	$ItemsUsed = 0
@@ -507,69 +500,6 @@ Func RestackInventory()
 	Next
 
 	LogMessage("Restack done: " & $iMoves & " move(s), " & $iSlotsFreed & " slot(s) freed")
-	Return True
-EndFunc
-
-Func CompactStorage($bToStart)
-	; Moves Xunlai storage items towards the start (or the end) of the storage, keeping their order
-	; Every move targets an empty slot, so items are never swapped
-	; Returns True on success, False if the storage is not accessible or the game did not confirm a move
-
-	; Slots of purchased storage panes, in storage order: [Bag, Slot]
-	Local $aSlots[0][2]
-	For $bag = $STORAGE_BAG_FIRST To $STORAGE_BAG_LAST
-		If Item_GetBagPtr($bag) = 0 Then ContinueLoop
-
-		Local $maxSlots = Item_GetBagInfo($bag, "Slots")
-		For $slot = 1 To $maxSlots
-			Local $iIndex = UBound($aSlots)
-			ReDim $aSlots[$iIndex + 1][2]
-			$aSlots[$iIndex][0] = $bag
-			$aSlots[$iIndex][1] = $slot
-		Next
-	Next
-
-	If UBound($aSlots) = 0 Then
-		LogMessage("Warning: Storage compaction skipped, Xunlai storage not accessible")
-		Return False
-	EndIf
-
-	LogMessage("Compacting storage...")
-
-	; Walk the slots in compaction order: the first empty slot met receives the next item found
-	Local $iFirst = 0
-	Local $iLast = UBound($aSlots) - 1
-	Local $iStep = 1
-	If Not $bToStart Then
-		$iFirst = $iLast
-		$iLast = 0
-		$iStep = -1
-	EndIf
-
-	Local $iFree = -1
-	Local $iMoves = 0
-	For $i = $iFirst To $iLast Step $iStep
-		Local $itemPtr = Item_GetItemBySlot($aSlots[$i][0], $aSlots[$i][1])
-		If $itemPtr = 0 Then
-			If $iFree = -1 Then $iFree = $i
-			ContinueLoop
-		EndIf
-		If $iFree = -1 Then ContinueLoop
-
-		Local $iItemID = Item_GetItemInfoByPtr($itemPtr, "ItemID")
-		Item_MoveItem($itemPtr, $aSlots[$iFree][0], $aSlots[$iFree][1])
-		If Not WaitForSlotInfo($aSlots[$iFree][0], $aSlots[$iFree][1], "ItemID", $iItemID) Then
-			LogMessage("Warning: Storage compaction stopped, move not confirmed (pane " & ($aSlots[$i][0] - $STORAGE_BAG_FIRST + 1) & ", slot " & $aSlots[$i][1] & ")")
-			Return False
-		EndIf
-
-		; Every slot between the free one and the current one is empty, the current one included
-		$iFree += $iStep
-		$iMoves += 1
-		Sleep($RESTACK_MOVE_DELAY_MS)
-	Next
-
-	LogMessage("Storage compaction done: " & $iMoves & " move(s)")
 	Return True
 EndFunc
 
