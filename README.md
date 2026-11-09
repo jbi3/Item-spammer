@@ -1,18 +1,19 @@
 # 🎒 Item Spammer
 
-**Version:** 1.2.0
+**Version:** 1.3.0
 
 A Guild Wars bot that helps you advance character titles by automatically consuming items from your inventory to progress **Drunkard**, **Party Animal**, and **Sweet Tooth** titles.
 
 ## ✨ Features
 
 - **Automatic Item Consumption:** Continuously uses items from your inventory
-- **Multi-Category Support:** Select and spam 1, 2, or all 3 categories in a single session
+- **Multi-Category Support:** Select and spam one or several categories in a single session
 - **Real-time Title Tracking:** Directly reads title points from game memory via GwAu3 API
 - **Three Title Categories:**
   - 🍺 **Drunkard** - Alcohol items
   - 🎉 **Party Animal** - Party items (fireworks, tonics, etc.)
   - 🍰 **Sweet Tooth** - Sweet items (candy, cakes, etc.)
+- **Containers:** Opens Trick or Treat Bags, Zaishen Strongboxes and other containers until none is left or the inventory is full (no title points)
 - **Point Threshold Management:** Automatically stops at 10,000 points (max title level)
 - **Value-Based Prioritization:** Uses less valuable items first (1pt → 2pt → 3pt → 5pt → 7pt → 25pt → 50pt)
 - **Auto-Restack:** Merges incomplete stacks of identical items in your inventory bags when the bot starts (250 items max per stack)
@@ -47,7 +48,7 @@ A Guild Wars bot that helps you advance character titles by automatically consum
 7. **Consumption Loop:**
    - Uses the lowest-value item available
    - Waits for item cooldown (e.g. tonics, instant for most items)
-8. **Auto-Stop:** Stops when reaching 10,000 points or running out of items for all selected categories
+8. **Auto-Stop:** Stops when reaching 10,000 points or running out of items for all selected categories (for Containers: when none is left or the inventory has no free slot)
 
 ### ⚠️ Important Notes
 
@@ -92,6 +93,14 @@ A Guild Wars bot that helps you advance character titles by automatically consum
 
 **Note:** Explorable-area-only items are excluded (Candy Apple, Candy Corn, Golden Egg, Honeycomb, Pumpkin Cookie, Refined Jelly, Slice of Pumpkin Pie, War Supplies, Wintergreen/Rainbow/Peppermint Candy Canes, Birthday Cupcake, Rock Candies). These items cannot be used in outposts/guild halls where the bot operates.
 
+### 🎁 Containers
+- Trick or Treat Bag
+- Imperial Guard Lockbox
+- Gift of the Traveller, Gift of the Huntsman, Royal Gift
+- Champion's, Hero's, Gladiator's and Strategist's Zaishen Strongboxes
+
+Opening a container needs at least one free inventory slot: keep some room before starting.
+
 ## 💡 Tips
 
 - Stock your inventory with items **before** starting the bot
@@ -108,7 +117,7 @@ A Guild Wars bot that helps you advance character titles by automatically consum
 
 Ideas under consideration for future development:
 
-- 🎁 **Extended Item Support:** Add functionality to automatically open Strongboxes, Wintersday Gifts, Zaishen Chests, and other stackable containers (ideas from Title Helper)
+- 🎁 **Extended Item Support:** Add Wintersday Gifts, Zaishen Chests and other containers missing from the Containers category (ideas from Title Helper)
 
 ## 🆘 Support
 

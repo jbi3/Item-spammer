@@ -7,6 +7,7 @@ Global $cbx_char_select = 0
 Global $chk_alcohol = 0
 Global $chk_party = 0
 Global $chk_sweet = 0
+Global $chk_container = 0
 Global $cbx_storage_mode = 0
 Global $btn_start = 0
 Global $lbl_status = 0
@@ -52,12 +53,14 @@ Func CreateGUI()
 	GUICtrlCreateLabel("Choose categories", 15, $yPos, 290, 17)
 	GUICtrlSetFont(-1, 8, 600) ; Bold
 	$yPos += 18
-	$chk_alcohol = GUICtrlCreateCheckbox("Alcohol", 15, $yPos, 70, 17)
+	$chk_alcohol = GUICtrlCreateCheckbox("Alcohol", 15, $yPos, 60, 17)
 	GUICtrlSetOnEvent($chk_alcohol, "OnCategoryChange")
-	$chk_party = GUICtrlCreateCheckbox("Party", 95, $yPos, 70, 17)
+	$chk_party = GUICtrlCreateCheckbox("Party", 85, $yPos, 55, 17)
 	GUICtrlSetOnEvent($chk_party, "OnCategoryChange")
-	$chk_sweet = GUICtrlCreateCheckbox("Sweet", 175, $yPos, 70, 17)
+	$chk_sweet = GUICtrlCreateCheckbox("Sweet", 150, $yPos, 55, 17)
 	GUICtrlSetOnEvent($chk_sweet, "OnCategoryChange")
+	$chk_container = GUICtrlCreateCheckbox("Containers", 215, $yPos, 90, 17)
+	GUICtrlSetOnEvent($chk_container, "OnCategoryChange")
 
 	; Storage compaction, applied at start
 	$yPos += 25
@@ -164,6 +167,8 @@ Func OnCategoryChange()
 		$SelectedCategories[$CATEGORY_PARTY] = (GUICtrlRead($chk_party) = $GUI_CHECKED)
 	ElseIf $checkbox = $chk_sweet Then
 		$SelectedCategories[$CATEGORY_SWEET] = (GUICtrlRead($chk_sweet) = $GUI_CHECKED)
+	ElseIf $checkbox = $chk_container Then
+		$SelectedCategories[$CATEGORY_CONTAINER] = (GUICtrlRead($chk_container) = $GUI_CHECKED)
 	EndIf
 	UpdateStartButtonState()
 EndFunc
@@ -186,7 +191,7 @@ EndFunc
 Func UpdateStartButtonState()
 	; Check if at least one category is selected
 	Local $bCategorySelected = False
-	For $i = 0 To 2
+	For $i = 0 To UBound($SelectedCategories) - 1
 		If $SelectedCategories[$i] Then
 			$bCategorySelected = True
 			ExitLoop
