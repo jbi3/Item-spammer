@@ -1,5 +1,5 @@
 #cs =============================================================================================================================
-	Item-Spammer version 1.2.0
+	Item-Spammer version 1.3.0
 	Author: Arca
 	Status: Public
     Purpose: It helps ease the pain of spamming items for the Drunkard, Party Animal and Sweet Tooth titles.
@@ -12,6 +12,7 @@
 	    - Uses the least valuable items first (1 pt → 2 pts → 3 pts, etc.) to preserve higher-value items.
 	    - Merges incomplete stacks of identical items in the inventory at start (250 items max per stack).
 	    - Optionally compacts the Xunlai storage at start, leaving free slots at its end or at its start.
+	    - Opens containers (Trick or Treat Bags, Zaishen Strongboxes, etc.) until none is left or the inventory is full.
 #ce =============================================================================================================================
 
 #RequireAdmin
@@ -33,7 +34,7 @@ Global $BotRunning = False
 Global $BotInitialized = False
 
 ; Category selection and processing
-Global $SelectedCategories[3] = [False, False, False] ; [0]=Alcohol, [1]=Party, [2]=Sweet
+Global $SelectedCategories[4] = [False, False, False, False] ; [0]=Alcohol, [1]=Party, [2]=Sweet, [3]=Containers
 Global $CurrentCategoryIndex = -1 ; Current category being processed (-1 = none)
 Global $CategoryQueue[0] ; Queue of category indices to process
 
@@ -111,8 +112,8 @@ Func BuildCategoryQueue()
 	; Build queue of categories to process based on selection
 	; Returns True if at least one category is selected, False otherwise
 	ReDim $CategoryQueue[0]
-	
-	For $i = 0 To 2
+
+	For $i = 0 To UBound($SelectedCategories) - 1
 		If $SelectedCategories[$i] Then
 			Local $iSize = UBound($CategoryQueue)
 			ReDim $CategoryQueue[$iSize + 1]
@@ -132,6 +133,8 @@ Func GetCategoryName($iCategory)
 			Return "Party"
 		Case $CATEGORY_SWEET
 			Return "Sweet"
+		Case $CATEGORY_CONTAINER
+			Return "Containers"
 		Case Else
 			Return "Unknown"
 	EndSwitch
@@ -238,7 +241,7 @@ Func StartBot()
 	
 	; Log selected categories
 	Local $sCategories = ""
-	For $i = 0 To 2
+	For $i = 0 To UBound($SelectedCategories) - 1
 		If $SelectedCategories[$i] Then
 			If $sCategories <> "" Then $sCategories &= ", "
 			$sCategories &= GetCategoryName($i)
@@ -285,7 +288,7 @@ Func GetCategoryItemsInInventory($iCategory)
 	; Returns 2D array: [ItemPtr, ModelID, Points]
 	
 	; Validate category parameter
-	If $iCategory < 0 Or $iCategory > 2 Then
+	If $iCategory < 0 Or $iCategory > $CATEGORY_CONTAINER Then
 		LogMessage("Error: Invalid category " & $iCategory)
 		Local $aEmpty[0][3]
 		Return $aEmpty
@@ -359,6 +362,13 @@ Func GetCategoryItemsInInventory($iCategory)
 				$aItemModelIDs[$iModelIdx] = $GC_AI_ALL_SWEET[$i]
 				$iModelIdx += 1
 			Next
+
+		Case $CATEGORY_CONTAINER
+			ReDim $aItemModelIDs[$GC_AI_CONTAINERS[0]]
+			For $i = 1 To $GC_AI_CONTAINERS[0]
+				$aItemModelIDs[$iModelIdx] = $GC_AI_CONTAINERS[$i]
+				$iModelIdx += 1
+			Next
 	EndSwitch
 	
 	; Search inventory bags (1-4) for items with matching ModelIDs
@@ -424,6 +434,17 @@ Func UseItem($itemPtr)
 	Sleep(50)
 	
 	Return True
+EndFunc
+
+Func CountFreeInventorySlots()
+	; Returns the number of empty slots in inventory bags (1-4)
+	Local $iFree = 0
+	Local $aBags[4] = [$GC_I_INVENTORY_BACKPACK, $GC_I_INVENTORY_BELT_POUCH, $GC_I_INVENTORY_BAG1, $GC_I_INVENTORY_BAG2]
+	For $b = 0 To UBound($aBags) - 1
+		If Item_GetBagPtr($aBags[$b]) = 0 Then ContinueLoop
+		$iFree += Item_GetBagInfo($aBags[$b], "EmptySlots")
+	Next
+	Return $iFree
 EndFunc
 
 Func RestackInventory()
@@ -619,6 +640,12 @@ While 1
 				If UBound($aItems) = 0 Then
 					$bCategoryComplete = True
 					$sReason = "Run out of items"
+				ElseIf $CurrentCategoryIndex = $CATEGORY_CONTAINER Then
+					; A container needs a free slot for its content
+					If CountFreeInventorySlots() = 0 Then
+						$bCategoryComplete = True
+						$sReason = "Inventory full"
+					EndIf
 				ElseIf $g_iTitleCurrentPoints[$CurrentCategoryIndex] >= $MAX_POINTS Then
 					$bCategoryComplete = True
 					$sReason = "Threshold reached (10,000 points)"
@@ -659,18 +686,12 @@ While 1
 						$ItemsUsed += 1
 						
 						; Log item used
-						LogMessage("Used item (ModelID: " & $modelID & ") (" & $points & "pt)")
-						
-						; $CurrentCategoryIndex directly maps to: [0]=Drunkard, [1]=Party, [2]=Sweet
-						Local $titleIdx = $CurrentCategoryIndex
-						
-						; Validate title index
-						If $titleIdx < 0 Or $titleIdx > 2 Then
-							LogMessage("Error: Invalid title index " & $titleIdx)
-							StopBot()
-							ContinueLoop
+						If $CurrentCategoryIndex = $CATEGORY_CONTAINER Then
+							LogMessage("Opened container (ModelID: " & $modelID & ")")
+						Else
+							LogMessage("Used item (ModelID: " & $modelID & ") (" & $points & "pt)")
 						EndIf
-						
+
 						; Check if item used was a tonic
 						; If so, add cooldown delay before using another tonic
 						If IsTonic($modelID) Then

@@ -6,6 +6,7 @@
 Global Const $CATEGORY_ALCOHOL = 0
 Global Const $CATEGORY_PARTY = 1
 Global Const $CATEGORY_SWEET = 2
+Global Const $CATEGORY_CONTAINER = 3 ; No title: stops when out of containers or when the inventory is full
 
 ; Settings
 Global Const $MAX_POINTS = 10000
@@ -50,6 +51,18 @@ Global Const $GC_AI_PARTY_TONICS_2PT[20] = [19, _
 	$GC_I_MODELID_GELATINOUS_TONIC, _
 	$GC_I_MODELID_ABOMINABLE_TONIC, _
 	$GC_I_MODELID_SINISTER_AUTOMATONIC_TONIC]
+
+; Containers - Opened to get their content, no title points (9 items)
+Global Const $GC_AI_CONTAINERS[10] = [9, _
+	$GC_I_MODELID_TRICK_OR_TREAT_BAG, _
+	$GC_I_MODELID_IMPERIAL_GUARD_LOCKBOX, _
+	$GC_I_MODELID_GIFT_OF_THE_TRAVELLER, _
+	$GC_I_MODELID_GIFT_OF_THE_HUNTSMAN, _
+	$GC_I_MODELID_ROYAL_GIFT, _
+	$GC_I_MODELID_CHAMPIONS_ZAISHEN_STRONGBOX, _
+	$GC_I_MODELID_HEROS_ZAISHEN_STRONGBOX, _
+	$GC_I_MODELID_GLADIATORS_ZAISHEN_STRONGBOX, _
+	$GC_I_MODELID_STRATEGISTS_ZAISHEN_STRONGBOX]
 
 ; All Tonics - Consolidated list for fast IsTonic() lookup (23 items total)
 Global Const $GC_AI_ALL_TONICS[24] = [23, _
