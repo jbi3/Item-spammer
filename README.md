@@ -14,7 +14,8 @@ A Guild Wars bot that helps you advance character titles by automatically consum
   - 🎉 **Party Animal** - Party items (fireworks, tonics, etc.)
   - 🍰 **Sweet Tooth** - Sweet items (candy, cakes, etc.)
 - **Containers:** Opens Trick or Treat Bags, Zaishen Strongboxes and other containers until none is left or the inventory is full (no title points)
-- **Point Threshold Management:** Automatically stops at 10,000 points (max title level)
+- **Point Threshold Management:** Automatically stops at 10,000 points (max title level), without wasting items past it
+- **Confirmed Uses:** Each title item counts only once the game adds its points; an item the game refuses 3 times in a row (e.g. one that cannot be used where you are) is set aside until the end of its category
 - **Value-Based Prioritization:** Uses less valuable items first (1pt → 2pt → 3pt → 5pt → 7pt → 25pt → 50pt)
 - **Auto-Restack:** Merges incomplete stacks of identical items in your inventory bags when the bot starts (250 items max per stack)
 - **Title Level Display:** Shows current accomplishment level (0-2) for each title
@@ -35,7 +36,7 @@ A Guild Wars bot that helps you advance character titles by automatically consum
 
 ## 🧠 How It Works
 1. **Category Selection:** Choose one or multiple categories to spam using checkboxes
-2. **Initialization:** Connects to Guild Wars client and reads current title points from memory
+2. **Initialization:** Connects to Guild Wars client and reads current title points from memory (the bot does not start if they cannot be read)
 3. **Restack:** Merges incomplete stacks of identical stackable items (all items, not only the selected categories) across the 4 inventory bags; Xunlai storage is not touched
 4. **Item Scanning:** Scans all inventory bags for consumable items matching the selected categories
 5. **Smart Sorting:** Prioritizes items by point value (lowest first) to maximize efficiency
@@ -45,6 +46,8 @@ A Guild Wars bot that helps you advance character titles by automatically consum
    - Continues until all selected categories are complete
 7. **Consumption Loop:**
    - Uses the lowest-value item available
+   - Waits for the game to add the title points (up to 1 s) before counting the item as used
+   - Sets an item aside until the end of the category after 3 refusals in a row
    - Waits for item cooldown (e.g. tonics, instant for most items)
 8. **Auto-Stop:** Stops when reaching 10,000 points or running out of items for all selected categories (for Containers: when none is left or the inventory has no free slot)
 
@@ -98,6 +101,8 @@ A Guild Wars bot that helps you advance character titles by automatically consum
 - Champion's, Hero's, Gladiator's and Strategist's Zaishen Strongboxes
 
 Opening a container needs at least one free inventory slot: keep some room before starting.
+
+Containers give no title points, so the bot cannot tell whether one was really opened: a container the game refuses is retried until none is left or the inventory is full.
 
 ## 💡 Tips
 
