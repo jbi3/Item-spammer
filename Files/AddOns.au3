@@ -17,7 +17,8 @@ Global Const $MAX_STACK_SIZE = 250
 ; Timing constants
 Global Const $TONIC_COOLDOWN_MS = 5500
 Global Const $STATUS_UPDATE_INTERVAL_MS = 1000
-Global Const $TITLE_CONFIRM_TIMEOUT_MS = 3000
+Global Const $USE_CONFIRM_TIMEOUT_MS = 1000 ; Max wait for the title points to go up after using an item
+Global Const $MAX_REFUSALS = 3 ; Refusals in a row before an item is set aside for the category
 Global Const $RESTACK_MOVE_DELAY_MS = 150
 Global Const $RESTACK_MOVE_TIMEOUT_MS = 1500
 

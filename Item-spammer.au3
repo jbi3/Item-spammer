@@ -37,6 +37,11 @@ Global $SelectedCategories[4] = [False, False, False, False] ; [0]=Alcohol, [1]=
 Global $CurrentCategoryIndex = -1 ; Current category being processed (-1 = none)
 Global $CategoryQueue[0] ; Queue of category indices to process
 
+; Items the game refused $MAX_REFUSALS times in a row are set aside until the end of the current category
+Global $g_aSkippedModelIDs[0]
+Global $g_iRefusedModelID = 0 ; ModelID of the last refused item
+Global $g_iRefusalCount = 0 ; Refusals in a row of that ModelID
+
 ; Title tracking (all 3 titles)
 ; [0]=Drunkard, [1]=Party Animal, [2]=Sweet Tooth
 Global $g_iTitleStartPoints[3] = [0, 0, 0] ; Starting points when bot started
@@ -158,6 +163,9 @@ Func StartNextCategory()
 	
 	; Get next category from queue
 	$CurrentCategoryIndex = $CategoryQueue[0]
+	ReDim $g_aSkippedModelIDs[0]
+	$g_iRefusedModelID = 0
+	$g_iRefusalCount = 0
 	
 	; Remove from queue (shift array)
 	Local $iQueueSize = UBound($CategoryQueue)
@@ -389,7 +397,8 @@ Func GetCategoryItemsInInventory($iCategory)
 			Local $modelID = Item_GetItemInfoByPtr($itemPtr, "ModelID")
 			; Check if this ModelID is in our category list - Use _ArraySearch for O(n) instead of O(n²)
 			Local $iFound = _ArraySearch($aItemModelIDs, $modelID)
-			If $iFound >= 0 Then
+			; Items set aside after repeated refusals are left out
+			If $iFound >= 0 And _ArraySearch($g_aSkippedModelIDs, $modelID) < 0 Then
 				; Store item info: [ItemPtr, ModelID, Points]
 				Local $iIndex = UBound($aItems)
 				ReDim $aItems[$iIndex + 1][3]
@@ -411,9 +420,9 @@ Func SortItemsByPoints($aItems)
 	Return $aItems
 EndFunc
 
-Func UseItem($itemPtr)
+Func UseItem($itemPtr, $iCategory)
 	; Use an item using GwAu3 function
-	; Returns True if successful, False otherwise
+	; Returns True once the game confirms the use, False if it refused it (or on error)
 	
 	If $itemPtr = 0 Then
 		LogMessage("Error: Invalid item pointer (0)")
@@ -427,13 +436,24 @@ Func UseItem($itemPtr)
 		Return False
 	EndIf
 	
-	; Use GwAu3 function
+	; Containers give no title points, so their use cannot be confirmed
+	If $iCategory = $CATEGORY_CONTAINER Then
+		Item_UseItem($itemPtr)
+		Sleep(50)
+		Return True
+	EndIf
+	
+	; The game does not report refusals: a use is confirmed once the title points go up
+	Local $iPointsBefore = $g_iTitleCurrentPoints[$iCategory]
 	Item_UseItem($itemPtr)
+	Local $hConfirmTimer = TimerInit()
+	Do
+		Sleep(50)
+		SyncTitlePointsFromGame()
+		If $g_iTitleCurrentPoints[$iCategory] > $iPointsBefore Then Return True
+	Until TimerDiff($hConfirmTimer) >= $USE_CONFIRM_TIMEOUT_MS
 	
-	; Wait a bit for item to be used
-	Sleep(50)
-	
-	Return True
+	Return False
 EndFunc
 
 Func CountFreeInventorySlots()
@@ -614,28 +634,16 @@ While 1
 					Local $modelID = $aItems[0][1]
 					Local $points = $aItems[0][2]
 					
-					If UseItem($itemPtr) Then
+					If UseItem($itemPtr, $CurrentCategoryIndex) Then
 						; Item used successfully
 						$ItemsUsed += 1
+						$g_iRefusalCount = 0
 						
 						; Log item used
 						If $CurrentCategoryIndex = $CATEGORY_CONTAINER Then
 							LogMessage("Opened container (ModelID: " & $modelID & ")")
 						Else
 							LogMessage("Used item (ModelID: " & $modelID & ") (" & $points & "pt)")
-						EndIf
-
-						; If this item should reach the threshold, wait for the game to confirm
-						; before using another one, so no extra (high-value) item is wasted
-						; Containers have no title: $g_iTitleCurrentPoints only covers the 3 titles
-						If $CurrentCategoryIndex <> $CATEGORY_CONTAINER Then
-							If $g_iTitleCurrentPoints[$CurrentCategoryIndex] + $points >= $MAX_POINTS Then
-								Local $hConfirmTimer = TimerInit()
-								Do
-									Sleep(50)
-									SyncTitlePointsFromGame()
-								Until $g_iTitleCurrentPoints[$CurrentCategoryIndex] >= $MAX_POINTS Or TimerDiff($hConfirmTimer) >= $TITLE_CONFIRM_TIMEOUT_MS
-							EndIf
 						EndIf
 
 						; Check if item used was a tonic
@@ -645,8 +653,19 @@ While 1
 							Sleep($TONIC_COOLDOWN_MS)
 						EndIf
 					Else
-						; Item usage failed - skip
-						LogMessage("Item (ModelID: " & $modelID & ") cannot be used here - skipping")
+						; Item refused by the game (no title points gained): set it aside after $MAX_REFUSALS in a row
+						If $modelID = $g_iRefusedModelID Then
+							$g_iRefusalCount += 1
+						Else
+							$g_iRefusedModelID = $modelID
+							$g_iRefusalCount = 1
+						EndIf
+						LogMessage("Item (ModelID: " & $modelID & ") refused by the game (" & $g_iRefusalCount & "/" & $MAX_REFUSALS & ")")
+						If $g_iRefusalCount >= $MAX_REFUSALS Then
+							_ArrayAdd($g_aSkippedModelIDs, $modelID)
+							$g_iRefusalCount = 0
+							LogMessage("Item (ModelID: " & $modelID & ") set aside until the end of the " & GetCategoryName($CurrentCategoryIndex) & " category")
+						EndIf
 					EndIf
 					
 					Sleep(100)
