@@ -17,7 +17,8 @@ Global Const $MAX_STACK_SIZE = 250
 ; Timing constants
 Global Const $TONIC_COOLDOWN_MS = 5500
 Global Const $STATUS_UPDATE_INTERVAL_MS = 1000
-Global Const $TITLE_SYNC_INTERVAL_MS = 2000
+Global Const $USE_CONFIRM_TIMEOUT_MS = 1000 ; Max wait for the title points to go up after using an item
+Global Const $MAX_REFUSALS = 3 ; Refusals in a row before an item is set aside for the category
 Global Const $RESTACK_MOVE_DELAY_MS = 150
 Global Const $RESTACK_MOVE_TIMEOUT_MS = 1500
 
@@ -86,7 +87,7 @@ Global Const $GC_AI_ALL_TONICS[24] = [23, _
 ; Point mapping (ModelID -> Points)
 ; Note: Explorable-area-only items excluded (15 items removed)
 ; These items can only be used in PvE explorable areas and cannot be spammed efficiently
-Global $g_PointMapping[62][2] ; Will be populated on initialization
+Global $g_PointMapping[61][2] ; Will be populated on initialization
 #EndRegion Global Variables
 
 #Region Point Mapping Functions
@@ -117,9 +118,11 @@ Func InitializePointMapping()
 		$i += 1
 	Next
 	
-	; Party items - 1 point (6 items)
+	; Party items - 1 point (5 items)
 	; Note: Array has incorrect count in [0], use UBound instead
+	; Party Beacon is also in this array but is worth 50 points (mapped below)
 	For $j = 1 To UBound($GC_AI_SPAMMABLE_PARTY) - 1
+		If $GC_AI_SPAMMABLE_PARTY[$j] = $GC_I_MODELID_PARTY_BEACON Then ContinueLoop
 		$g_PointMapping[$i][0] = $GC_AI_SPAMMABLE_PARTY[$j]
 		$g_PointMapping[$i][1] = 1
 		$i += 1
