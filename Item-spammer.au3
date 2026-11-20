@@ -527,7 +527,6 @@ CreateGUI()
 
 ; Main event loop
 Local $iLastStatusUpdate = TimerInit()
-Local $iLastTitleSync = TimerInit()
 While 1
 	; Update status display periodically
 	If TimerDiff($iLastStatusUpdate) >= $STATUS_UPDATE_INTERVAL_MS Then
@@ -535,11 +534,8 @@ While 1
 		$iLastStatusUpdate = TimerInit()
 	EndIf
 	
-	; Sync title points from game periodically
-	If $BotRunning And $BotInitialized And TimerDiff($iLastTitleSync) >= $TITLE_SYNC_INTERVAL_MS Then
-		SyncTitlePointsFromGame()
-		$iLastTitleSync = TimerInit()
-	EndIf
+	; Sync title points from game before each item so the threshold check is never stale
+	If $BotRunning And $BotInitialized Then SyncTitlePointsFromGame()
 	
 	If $BotRunning And $BotInitialized Then
 		; Check if game is loaded
@@ -620,6 +616,19 @@ While 1
 							LogMessage("Opened container (ModelID: " & $modelID & ")")
 						Else
 							LogMessage("Used item (ModelID: " & $modelID & ") (" & $points & "pt)")
+						EndIf
+
+						; If this item should reach the threshold, wait for the game to confirm
+						; before using another one, so no extra (high-value) item is wasted
+						; Containers have no title: $g_iTitleCurrentPoints only covers the 3 titles
+						If $CurrentCategoryIndex <> $CATEGORY_CONTAINER Then
+							If $g_iTitleCurrentPoints[$CurrentCategoryIndex] + $points >= $MAX_POINTS Then
+								Local $hConfirmTimer = TimerInit()
+								Do
+									Sleep(50)
+									SyncTitlePointsFromGame()
+								Until $g_iTitleCurrentPoints[$CurrentCategoryIndex] >= $MAX_POINTS Or TimerDiff($hConfirmTimer) >= $TITLE_CONFIRM_TIMEOUT_MS
+							EndIf
 						EndIf
 
 						; Check if item used was a tonic
