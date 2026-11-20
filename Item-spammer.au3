@@ -63,6 +63,13 @@ Func SyncTitlePointsFromGame()
 	
 	Local $bSuccess = True
 	
+	; Title_GetTitleInfo returns 0 both for 0 points and when the title array is not loaded
+	; (e.g. loading screen): keep the last known points instead of resetting them to 0
+	If World_GetWorldInfo("TitleArray") = 0 Then
+		LogMessage("Warning: Failed to read title points (title array not loaded)")
+		Return False
+	EndIf
+	
 	; Loop through all 3 titles
 	For $i = 0 To 2
 		Local $pts = Title_GetTitleInfo($aTitleIDs[$i], "CurrentPoints")
