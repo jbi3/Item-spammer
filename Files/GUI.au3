@@ -128,6 +128,7 @@ Func CreateGUI()
 	
 	$yPos += 20
 	$lbl_status = GUICtrlCreateEdit("", 15, $yPos, 290, 155, BitOR($ES_READONLY, $WS_VSCROLL, $ES_AUTOVSCROLL))
+	_GUICtrlEdit_SetLimitText($lbl_status, 0) ; No size limit (default 30,000 chars would cut appended log)
 	
 	; Close Statistics group
 	GUICtrlCreateGroup("", -99, -99, 1, 1)
@@ -209,7 +210,8 @@ EndFunc
 Func LogMessage($sMessage)
 	Local $sTimestamp = "[" & StringFormat("%02d:%02d:%02d", @HOUR, @MIN, @SEC) & "]"
 	Local $sLogEntry = $sTimestamp & " " & $sMessage & @CRLF
-	GUICtrlSetData($lbl_status, GUICtrlRead($lbl_status) & $sLogEntry)
+	; Append instead of rewriting the whole log, which slowed down long sessions
+	_GUICtrlEdit_AppendText($lbl_status, $sLogEntry)
 	_GUICtrlEdit_Scroll($lbl_status, $SB_SCROLLCARET)
 EndFunc
 
